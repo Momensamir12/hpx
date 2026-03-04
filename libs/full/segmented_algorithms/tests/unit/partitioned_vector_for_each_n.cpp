@@ -59,6 +59,19 @@ struct cmp
 };
 
 ///////////////////////////////////////////////////////////////////////////////
+template <typename T, typename InIter>
+void verify_values(
+    InIter first, InIter last, T const& val, bool must_be_equal = true)
+{
+    for (InIter it = first; it != last; ++it)
+    {
+        if (must_be_equal)
+            HPX_TEST_EQ(*it, val);
+        else
+            HPX_TEST_NEQ(*it, val);
+    }
+}
+
 template <typename ExPolicy, typename T>
 void verify_values(
     ExPolicy&&, hpx::partitioned_vector<T> const& v, T const& val)
@@ -121,6 +134,15 @@ void test_for_each_n(ExPolicy&& policy, hpx::partitioned_vector<T>& v, T val)
 
     verify_values(policy, v, ++val);
     verify_values_count(policy, v, val);
+}
+
+template <typename ExPolicy, typename T>
+void test_for_each_n_partial(ExPolicy&& policy, hpx::partitioned_vector<T>& v,
+    std::size_t n, T const& init)
+{
+    hpx::for_each_n(v.begin(), n, pfo());
+    verify_values(v.begin(), v.begin() + n, T(init + 1));
+    verify_values(v.begin() + n, v.end(), init);
 }
 
 template <typename ExPolicy, typename T>
@@ -192,8 +214,6 @@ void for_each_tests(std::vector<hpx::id_type>& localities)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////////////
 template <typename T>
 void for_each_n_tests(std::vector<hpx::id_type>& localities)
 {
@@ -232,6 +252,44 @@ void for_each_n_tests(std::vector<hpx::id_type>& localities)
             hpx::execution::seq(hpx::execution::task), v, T(2));
         test_for_each_n_async(
             hpx::execution::par(hpx::execution::task), v, T(3));
+    }
+
+    // partial count tests: exercises segment boundary crossing
+
+    {
+        hpx::partitioned_vector<T> v(
+            length, T(0), hpx::container_layout(localities));
+        test_for_each_n_partial(hpx::execution::seq, v, 1, T(0));
+    }
+
+    {
+        hpx::partitioned_vector<T> v(
+            length, T(0), hpx::container_layout(localities));
+        test_for_each_n_partial(hpx::execution::par, v, 1, T(0));
+    }
+
+    {
+        hpx::partitioned_vector<T> v(
+            length, T(0), hpx::container_layout(localities));
+        test_for_each_n_partial(hpx::execution::seq, v, length / 2, T(0));
+    }
+
+    {
+        hpx::partitioned_vector<T> v(
+            length, T(0), hpx::container_layout(localities));
+        test_for_each_n_partial(hpx::execution::par, v, length / 2, T(0));
+    }
+
+    {
+        hpx::partitioned_vector<T> v(
+            length, T(0), hpx::container_layout(localities));
+        test_for_each_n_partial(hpx::execution::seq, v, length - 1, T(0));
+    }
+
+    {
+        hpx::partitioned_vector<T> v(
+            length, T(0), hpx::container_layout(localities));
+        test_for_each_n_partial(hpx::execution::par, v, length - 1, T(0));
     }
 }
 

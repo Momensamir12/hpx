@@ -17,6 +17,7 @@
 #include <hpx/parallel/segmented_algorithms/fill.hpp>
 #include <hpx/parallel/segmented_algorithms/find.hpp>
 #include <hpx/parallel/segmented_algorithms/for_each.hpp>
+#include <hpx/parallel/segmented_algorithms/for_each_n.hpp>
 #include <hpx/parallel/segmented_algorithms/generate.hpp>
 #include <hpx/parallel/segmented_algorithms/inclusive_scan.hpp>
 #include <hpx/parallel/segmented_algorithms/minmax.hpp>
